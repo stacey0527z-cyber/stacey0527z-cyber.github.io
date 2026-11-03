@@ -286,6 +286,21 @@ dl.kit dt{white-space:nowrap;color:var(--faint)}
 }
 @media (max-width:860px){.stars{max-width:300px;margin:28px auto 0}}
 
+/* 留言冒出来 + 落一圈涟漪 */
+.gb-note{position:relative}
+@keyframes gbrise{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+.gb-note.fresh{animation:gbrise .9s cubic-bezier(.22,.61,.24,1)}
+.gb-rip{position:absolute;left:50%;top:50%;width:min(420px,78%);height:120px;
+  transform:translate(-50%,-50%);overflow:visible;pointer-events:none;z-index:2}
+.gb-rip path{fill:none;stroke:var(--faint);stroke-width:.8;opacity:0;
+  transform-origin:120px 35px;
+  animation:gbrip 1.5s cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes gbrip{
+  0%{opacity:.5;transform:scale(.1)}
+  100%{opacity:0;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){
+  .gb-note.fresh{animation:none}.gb-rip{display:none}}
+
 /* 点击落下的涟漪 */
 .rip{position:fixed;left:0;top:0;z-index:95;pointer-events:none;overflow:visible;
   animation:rip 1.1s cubic-bezier(.2,.6,.3,1) forwards}
@@ -754,40 +769,161 @@ html.drops,html.drops *{cursor:none!important}
     '</div></div><div><h2>Based in</h2><p style="color:var(--soft);font-size:13px;line-height:1.9">'+
     'London, United Kingdom<br>Zhejiang, China<br><br>© 2026 Xiyan Fan</p></div></div>';
 
-  /* ── 留言板：giscus（GitHub Discussions） ── */
+  /* ── 留言板：实时（Cloudflare Worker + WebSocket） ── */
   (function(){
-    var v=viewEl("guestbook");
+    /* 优先自己的子域名（国内更稳），连不上退回 workers.dev */
+    var ENDPOINTS=["wss://notes.xiyanfan.com/live",
+                   "wss://curly-union-8180.stacey0527z.workers.dev/live"],
+        epAt=0, MAX=300, v=viewEl("guestbook");
     v.innerHTML='<div class="leaf gb">'+
       '<div class="gb-side"><h2 class="gb-h">Guestbook</h2>'+
       '<p class="gb-lede">Leave a note. It will stay here.</p>'+
-      '<p class="gb-state" id="gb-state">Signing in with GitHub lets you leave a note.</p></div>'+
-      '<div class="gb-main"><div id="giscus-slot"></div></div></div>';
-    var slot=v.querySelector("#giscus-slot"),loaded=false;
-    function load(){
-      if(loaded)return;loaded=true;
-      var s=document.createElement("script");
-      s.src="https://giscus.app/client.js";
-      s.setAttribute("data-repo","stacey0527z-cyber/stacey0527z-cyber.github.io");
-      s.setAttribute("data-repo-id","R_kgDOVhU4-A");
-      s.setAttribute("data-category","General");
-      s.setAttribute("data-category-id","DIC_kwDOVhU4-M4DKTj-");
-      s.setAttribute("data-mapping","specific");
-      s.setAttribute("data-term","Guestbook");
-      s.setAttribute("data-strict","0");
-      s.setAttribute("data-reactions-enabled","1");
-      s.setAttribute("data-emit-metadata","0");
-      s.setAttribute("data-input-position","top");
-      s.setAttribute("data-theme","https://stacey0527z-cyber.github.io/giscus-theme.css");
-      s.setAttribute("data-lang","en");
-      s.crossOrigin="anonymous";
-      s.async=true;
-      s.onerror=function(){
-        var st=v.querySelector("#gb-state");
-        if(st)st.textContent="The notes cannot be reached right now.";
-      };
-      slot.appendChild(s);
+      '<form class="gb-form" id="gb-form" autocomplete="off">'+
+        '<label class="gb-l" for="gb-name">Your name</label>'+
+        '<input class="gb-in" id="gb-name" type="text" maxlength="24" required>'+
+        '<label class="gb-l" for="gb-text">Your note</label>'+
+        '<textarea class="gb-in" id="gb-text" rows="4" maxlength="'+MAX+'" required></textarea>'+
+        '<div class="gb-row"><button class="gb-btn" id="gb-send" type="submit">Leave a note</button>'+
+        '<span class="gb-count" id="gb-count">0 / '+MAX+'</span></div>'+
+        '<p class="gb-msg" id="gb-msg" role="status"></p></form>'+
+      '<p class="gb-state" id="gb-state">Connecting…</p></div>'+
+      '<div class="gb-main"><ul class="gb-list" id="gb-list"></ul></div></div>';
+
+    var $=function(id){return v.querySelector("#"+id);},
+        form=$("gb-form"),nameIn=$("gb-name"),textIn=$("gb-text"),
+        sendBtn=$("gb-send"),countEl=$("gb-count"),msgEl=$("gb-msg"),
+        stateEl=$("gb-state"),listEl=$("gb-list"),
+        ws=null,ready=false,tries=0,seen={},online=0;
+
+    /* 名字记在本地，下次不用再填 */
+    try{ var saved=localStorage.getItem("gb-name"); if(saved)nameIn.value=saved; }catch(e){}
+
+    function when(ts){
+      var d=Math.max(0,Date.now()-ts), m=Math.floor(d/6e4);
+      if(m<1)return"刚刚";
+      if(m<60)return m+" 分钟前";
+      var h=Math.floor(m/60); if(h<24)return h+" 小时前";
+      var day=Math.floor(h/24); if(day<8)return day+" 天前";
+      var t=new Date(ts);
+      return t.getFullYear()+"."+(t.getMonth()+1)+"."+t.getDate();
     }
-    load();
+    function esc(s){
+      return String(s).replace(/[&<>"]/g,function(c){
+        return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});
+    }
+    function state(t){ stateEl.textContent=t; }
+    function people(){
+      state(online<=1?"只有你在这里":(online+" 人正在看"));
+    }
+
+    /* 一条留言；fresh=true 时冒出来并落一圈涟漪 */
+    function add(note,fresh){
+      if(seen[note.id])return; seen[note.id]=1;
+      var li=document.createElement("li");
+      li.className="gb-note"+(fresh?" fresh":"");
+      li.setAttribute("data-ts",note.ts);
+      li.innerHTML='<p class="nt">'+esc(note.text)+'</p>'+
+        '<p class="nm"><span class="sg">'+esc(note.name)+'</span>'+
+        '<span>'+when(note.ts)+'</span></p>';
+      listEl.insertBefore(li,listEl.firstChild);
+      if(fresh)ripple(li);
+    }
+
+    /* 和开屏雨滴同一种手绘线条 */
+    function ripple(host){
+      if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+      var NS="http://www.w3.org/2000/svg",
+          svg=document.createElementNS(NS,"svg");
+      svg.setAttribute("class","gb-rip");
+      svg.setAttribute("viewBox","0 0 240 70");
+      svg.setAttribute("aria-hidden","true");
+      for(var k=0;k<2;k++){
+        var pts=[],N=26,i,th,rr,R=(k?62:96);
+        for(i=0;i<=N;i++){
+          th=(i/N)*6.283;
+          rr=R*(1+(Math.random()*2-1)*.03);
+          pts.push((120+Math.cos(th)*rr).toFixed(1)+","+
+                   (35+Math.sin(th)*rr*.30).toFixed(1));
+        }
+        var p=document.createElementNS(NS,"path");
+        p.setAttribute("d","M"+pts.join("L")+"Z");
+        p.setAttribute("style","animation-delay:"+(k*.13)+"s");
+        svg.appendChild(p);
+      }
+      host.appendChild(svg);
+      setTimeout(function(){ if(svg.parentNode)svg.parentNode.removeChild(svg); },1500);
+    }
+
+    function connect(){
+      var url=ENDPOINTS[epAt % ENDPOINTS.length];
+      try{ ws=new WebSocket(url); }catch(e){ epAt++; retry(); return; }
+
+      ws.onopen=function(){ tries=0; };
+
+      ws.onmessage=function(ev){
+        var m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+        if(m.t==="init"){
+          ready=true; online=m.online||1;
+          listEl.innerHTML=""; seen={};
+          for(var i=0;i<m.notes.length;i++)add(m.notes[i],false);
+          if(!m.notes.length)state("还没有人留言。第一句归你。");
+          else people();
+          sendBtn.disabled=false;
+        }
+        else if(m.t==="note"){ add(m.note,true); }
+        else if(m.t==="online"){ online=m.n; if(listEl.children.length)people(); }
+        else if(m.t==="ok"){
+          textIn.value=""; countEl.textContent="0 / "+MAX;
+          sendBtn.disabled=false; msgEl.textContent="留下了。";
+          setTimeout(function(){ msgEl.textContent=""; },2600);
+        }
+        else if(m.t==="err"){
+          sendBtn.disabled=false; msgEl.textContent=m.msg||"没能送出去。";
+        }
+      };
+
+      ws.onclose=function(){
+        if(!ready)epAt++;
+        ready=false; retry();
+      };
+      ws.onerror=function(){ try{ ws.close(); }catch(e){} };
+    }
+
+    function retry(){
+      sendBtn.disabled=true;
+      if(tries>6){ state("连不上留言板。过一会儿再试。"); return; }
+      var wait=Math.min(12000,800*Math.pow(2,tries++));
+      state("正在重新连接…");
+      setTimeout(connect,wait);
+    }
+
+    textIn.addEventListener("input",function(){
+      countEl.textContent=textIn.value.length+" / "+MAX;
+      if(ready&&ws&&ws.readyState===1)
+        try{ ws.send(JSON.stringify({t:"typing"})); }catch(e){}
+    });
+
+    form.addEventListener("submit",function(e){
+      e.preventDefault();
+      var nm=nameIn.value.trim(), tx=textIn.value.trim();
+      if(!tx){ msgEl.textContent="写点什么吧。"; return; }
+      if(!ready||!ws||ws.readyState!==1){ msgEl.textContent="还没连上，稍等一下。"; return; }
+      try{ localStorage.setItem("gb-name",nm); }catch(e){}
+      sendBtn.disabled=true; msgEl.textContent="";
+      ws.send(JSON.stringify({t:"note",name:nm,text:tx}));
+    });
+
+    sendBtn.disabled=true;
+    connect();
+    setInterval(function(){
+      var items=listEl.querySelectorAll(".gb-note");
+      for(var i=0;i<items.length;i++){
+        var ts=items[i].getAttribute("data-ts");
+        if(!ts)continue;
+        var sp=items[i].querySelector(".nm span:last-child");
+        if(sp)sp.textContent=when(+ts);
+      }
+    },60000);
   })();
 
   /* ── 点击处落一圈手绘涟漪（和开屏的雨同一种线条） ── */
