@@ -356,7 +356,9 @@ html.drops,html.drops *{cursor:none!important}
     {id:"stone",en:"I am a stone", zh:"我 是 一 块 石 头",when:"2025",
      note:"",                             tone:"tide",cap:"I am a stone"},
     {id:"aqua", en:"Aquarium",     zh:"水 族 馆",when:"2025",
-     note:"",                             tone:"tide",cap:"Aquarium"}
+     note:"",                             tone:"tide",cap:"Aquarium"},
+    {id:"barb", en:"Barbican",     zh:"巴 比 肯",when:"2026",
+     note:"",                             tone:"warm",cap:"Barbican"}
   ];
 
   /* 每行：[项目, 宽高比]。按顺序对应 photos/01.jpg … 标题自动按项目内序号编 */
@@ -400,7 +402,13 @@ html.drops,html.drops *{cursor:none!important}
     ["aqua",1.5],
     ["aqua",1.5],
     ["aqua",1.5],
-    ["aqua",1.5]
+    ["aqua",1.5],
+    ["barb",1.5],
+    ["barb",1.5],
+    ["barb",1.5],
+    ["barb",1.5],
+    ["barb",1.5],
+    ["barb",1.5]
   ].map(function(a,i){
     var n=(i<9?"0":"")+(i+1);
     return {s:a[0],r:a[1],g:a[2]||0,film:"",i:i,
