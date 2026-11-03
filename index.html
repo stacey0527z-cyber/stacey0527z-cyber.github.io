@@ -639,106 +639,40 @@ html.drops,html.drops *{cursor:none!important}
     '</div></div><div><h2>Based in</h2><p style="color:var(--soft);font-size:13px;line-height:1.9">'+
     'London, United Kingdom<br>Zhejiang, China<br><br>© 2026 Xiyan Fan</p></div></div>';
 
-  /* ── 留言板：读写走 db 能力；没有登录或没有权限时，只显示说明 ── */
+  /* ── 留言板：giscus（GitHub Discussions） ── */
   (function(){
-    if(!(window.claude&&window.claude.use))return;
     var v=viewEl("guestbook");
     v.innerHTML='<div class="leaf gb">'+
       '<div class="gb-side"><h2 class="gb-h">Guestbook</h2>'+
-      '<p class="gb-lede" id="gb-lede">Leave a note. It will stay here.</p>'+
-      '<form class="gb-form" id="gb-form" autocomplete="off" hidden>'+
-        '<label class="gb-l" for="gb-name">Your name</label>'+
-        '<input class="gb-in" id="gb-name" type="text" maxlength="40" required>'+
-        '<label class="gb-l" for="gb-text">Your note</label>'+
-        '<textarea class="gb-in" id="gb-text" rows="4" maxlength="300" required></textarea>'+
-        '<div class="gb-row"><button class="gb-btn" id="gb-send" type="submit">Leave a note</button>'+
-        '<span class="gb-count" id="gb-count">0 / 300</span></div>'+
-        '<p class="gb-msg" id="gb-msg" role="status"></p></form>'+
-      '<p class="gb-state" id="gb-state">Loading the notes…</p></div>'+
-      '<div class="gb-main"><ul class="gb-list" id="gb-list"></ul></div></div>';
-    var $=function(id){return v.querySelector("#"+id);},
-        form=$("gb-form"),nameIn=$("gb-name"),textIn=$("gb-text"),sendBtn=$("gb-send"),
-        count=$("gb-count"),msg=$("gb-msg"),state=$("gb-state"),list=$("gb-list"),lede=$("gb-lede");
-    var db=null,uid=null,isAdmin=false,docs={},got=false,busy=false,MAXN=30;
-    try{nameIn.value=localStorage.getItem("gb-name")||"";}catch(e){}
-
-    function setState(t){state.textContent=t;state.hidden=!t;}
-    function clean(arr){
-      return (Array.isArray(arr)?arr:[]).filter(function(e){
-        return e&&typeof e.id==="string"&&typeof e.text==="string"&&typeof e.ts==="number";
-      });
+      '<p class="gb-lede">Leave a note. It will stay here.</p>'+
+      '<p class="gb-state" id="gb-state">Signing in with GitHub lets you leave a note.</p></div>'+
+      '<div class="gb-main"><div id="giscus-slot"></div></div></div>';
+    var slot=v.querySelector("#giscus-slot"),loaded=false;
+    function load(){
+      if(loaded)return;loaded=true;
+      var s=document.createElement("script");
+      s.src="https://giscus.app/client.js";
+      s.setAttribute("data-repo","stacey0527z-cyber/stacey0527z-cyber.github.io");
+      s.setAttribute("data-repo-id","R_kgDOVhU4-A");
+      s.setAttribute("data-category","General");
+      s.setAttribute("data-category-id","DIC_kwDOVhU4-M4DKTj-");
+      s.setAttribute("data-mapping","specific");
+      s.setAttribute("data-term","Guestbook");
+      s.setAttribute("data-strict","0");
+      s.setAttribute("data-reactions-enabled","1");
+      s.setAttribute("data-emit-metadata","0");
+      s.setAttribute("data-input-position","top");
+      s.setAttribute("data-theme","light");
+      s.setAttribute("data-lang","en");
+      s.crossOrigin="anonymous";
+      s.async=true;
+      s.onerror=function(){
+        var st=v.querySelector("#gb-state");
+        if(st)st.textContent="The notes cannot be reached right now.";
+      };
+      slot.appendChild(s);
     }
-    function render(){
-      var all=[];
-      Object.keys(docs).forEach(function(d){docs[d].forEach(function(e){all.push({d:d,e:e});});});
-      all.sort(function(a,b){return b.e.ts-a.e.ts;});
-      list.textContent="";
-      setState(all.length?"":"No notes yet. Be the first.");
-      all.forEach(function(x){
-        var li=document.createElement("li");li.className="gb-note";
-        var t=document.createElement("p");t.className="nt";t.textContent=x.e.text;
-        var m=document.createElement("p");m.className="nm";
-        var sg=document.createElement("span");sg.className="sg";sg.textContent=String(x.e.sig||"Someone");
-        var tm=document.createElement("time");
-        tm.textContent=new Date(x.e.ts).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
-        m.appendChild(sg);m.appendChild(tm);
-        if(db&&(x.d===uid||isAdmin)){
-          var rm=document.createElement("button");rm.type="button";rm.className="rm";rm.textContent="delete";
-          rm.addEventListener("click",function(){remove(x.d,x.e.id);});
-          m.appendChild(rm);
-        }
-        li.appendChild(t);li.appendChild(m);list.appendChild(li);
-      });
-    }
-    function remove(docId,entryId){
-      if(busy||!db)return;busy=true;
-      var left=(docs[docId]||[]).filter(function(e){return e.id!==entryId;}),ref=db.doc("guestbook/"+docId);
-      (left.length?ref.set({entries:left}):ref.delete())
-        .catch(function(){msg.textContent="That note could not be deleted just now.";})
-        .then(function(){busy=false;});
-    }
-    function offline(){
-      lede.textContent="The guestbook opens for signed-in visitors of this page.";
-      setState("Sign in to read and leave notes.");
-    }
-    textIn.addEventListener("input",function(){count.textContent=textIn.value.length+" / 300";});
-    form.addEventListener("submit",function(ev){
-      ev.preventDefault();
-      if(busy||!db||!uid)return;
-      var sig=nameIn.value.trim().slice(0,40),text=textIn.value.trim().slice(0,300),mine=docs[uid]||[];
-      if(!sig||!text){msg.textContent="Add your name and a note first.";return;}
-      if(mine.length>=MAXN){msg.textContent="You have reached "+MAXN+" notes. Delete one to add another.";return;}
-      busy=true;sendBtn.disabled=true;msg.textContent="";
-      var entry={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),sig:sig,text:text,ts:Date.now()};
-      db.doc("guestbook/"+uid).set({entries:mine.concat([entry])}).then(function(){
-        textIn.value="";count.textContent="0 / 300";msg.textContent="Thank you. Your note is up.";
-        try{localStorage.setItem("gb-name",sig);}catch(e){}
-      },function(err){
-        msg.textContent=(err&&err.code==="quota_exceeded")?"The guestbook is full right now.":"Your note could not be saved. Please try again.";
-      }).then(function(){busy=false;sendBtn.disabled=false;});
-    });
-    function init(){
-      if(!window.claude||!window.claude.use){offline();return;}
-      Promise.all([window.claude.use("db"),window.claude.use("user")]).then(function(r){
-        db=r[0];var user=r[1];
-        if(!db){offline();return;}
-        return Promise.all([user?user.id():null,user?user.can("data.write"):null,user?user.canEdit():false]).then(function(x){
-          uid=x[0];isAdmin=!!x[2];
-          var canWrite=!!uid&&x[1]!==false;
-          form.hidden=!canWrite;
-          if(!canWrite)lede.textContent="Notes can be read here. Leaving one needs contributor access.";
-          var timer=setTimeout(function(){if(!got)setState("The notes cannot be reached yet. They will appear when the connection is back.");},10000);
-          db.collection("guestbook").onSnapshot(function(snap){
-            if(!snap.metadata.fromCache)got=true;
-            clearTimeout(timer);
-            docs={};
-            snap.docs.forEach(function(d){var data=d.data();docs[d.id]=clean(data&&data.entries);});
-            render();
-          },function(){clearTimeout(timer);setState("The notes cannot be shown right now.");});
-        });
-      }).catch(offline);
-    }
-    init();
+    load();
   })();
 
   /* ── 点击处落一圈手绘涟漪（和开屏的雨同一种线条） ── */
