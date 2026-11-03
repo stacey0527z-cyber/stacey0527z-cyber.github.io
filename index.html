@@ -771,7 +771,6 @@ html.drops,html.drops *{cursor:none!important}
 
   /* ── 留言板：实时（Cloudflare Worker + WebSocket） ── */
   (function(){
-    /* 优先自己的子域名（国内更稳），连不上退回 workers.dev */
     var ENDPOINTS=["wss://notes.xiyanfan.com/live",
                    "wss://curly-union-8180.stacey0527z.workers.dev/live"],
         epAt=0, MAX=300, v=viewEl("guestbook");
@@ -795,8 +794,19 @@ html.drops,html.drops *{cursor:none!important}
         stateEl=$("gb-state"),listEl=$("gb-list"),
         ws=null,ready=false,tries=0,seen={},online=0;
 
-    /* 名字记在本地，下次不用再填 */
     try{ var saved=localStorage.getItem("gb-name"); if(saved)nameIn.value=saved; }catch(e){}
+
+    /* 管理密钥：用 ?admin=… 而不是 #admin=…，哈希会被页面路由改写 */
+    var KEY=null;
+    try{
+      var hm=(location.search||"").match(/[?&]admin=([^&]+)/);
+      if(hm){
+        localStorage.setItem("gb-key",decodeURIComponent(hm[1]));
+        var q=location.search.replace(/[?&]admin=[^&]*/,"").replace(/^&/,"?");
+        history.replaceState(null,"",location.pathname+(q==="?"?"":q)+"#guestbook");
+      }
+      KEY=localStorage.getItem("gb-key");
+    }catch(e){}
 
     function when(ts){
       var d=Math.max(0,Date.now()-ts), m=Math.floor(d/6e4);
@@ -816,20 +826,28 @@ html.drops,html.drops *{cursor:none!important}
       state(online<=1?"只有你在这里":(online+" 人正在看"));
     }
 
-    /* 一条留言；fresh=true 时冒出来并落一圈涟漪 */
     function add(note,fresh){
       if(seen[note.id])return; seen[note.id]=1;
       var li=document.createElement("li");
       li.className="gb-note"+(fresh?" fresh":"");
       li.setAttribute("data-ts",note.ts);
+      li.setAttribute("data-id",note.id);
       li.innerHTML='<p class="nt">'+esc(note.text)+'</p>'+
         '<p class="nm"><span class="sg">'+esc(note.name)+'</span>'+
-        '<span>'+when(note.ts)+'</span></p>';
+        '<span>'+when(note.ts)+'</span>'+
+        (KEY?'<button class="rm" type="button">删除</button>':'')+'</p>';
+      if(KEY){
+        var rm=li.querySelector(".rm");
+        rm.addEventListener("click",function(){
+          if(!ws||ws.readyState!==1)return;
+          rm.disabled=true;
+          ws.send(JSON.stringify({t:"del",id:note.id,key:KEY}));
+        });
+      }
       listEl.insertBefore(li,listEl.firstChild);
       if(fresh)ripple(li);
     }
 
-    /* 和开屏雨滴同一种手绘线条 */
     function ripple(host){
       if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
       var NS="http://www.w3.org/2000/svg",
@@ -857,9 +875,7 @@ html.drops,html.drops *{cursor:none!important}
     function connect(){
       var url=ENDPOINTS[epAt % ENDPOINTS.length];
       try{ ws=new WebSocket(url); }catch(e){ epAt++; retry(); return; }
-
       ws.onopen=function(){ tries=0; };
-
       ws.onmessage=function(ev){
         var m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
         if(m.t==="init"){
@@ -870,8 +886,20 @@ html.drops,html.drops *{cursor:none!important}
           else people();
           sendBtn.disabled=false;
         }
-        else if(m.t==="note"){ add(m.note,true); }
+        else if(m.t==="note"){ add(m.note,true); people(); }
         else if(m.t==="online"){ online=m.n; if(listEl.children.length)people(); }
+        else if(m.t==="del"){
+          var items=listEl.querySelectorAll(".gb-note");
+          for(var k=0;k<items.length;k++){
+            if(items[k].getAttribute("data-id")===m.id){
+              items[k].parentNode.removeChild(items[k]);
+              delete seen[m.id];
+              break;
+            }
+          }
+          if(!listEl.children.length)state("还没有人留言。第一句归你。");
+          else people();
+        }
         else if(m.t==="ok"){
           textIn.value=""; countEl.textContent="0 / "+MAX;
           sendBtn.disabled=false; msgEl.textContent="留下了。";
@@ -881,11 +909,7 @@ html.drops,html.drops *{cursor:none!important}
           sendBtn.disabled=false; msgEl.textContent=m.msg||"没能送出去。";
         }
       };
-
-      ws.onclose=function(){
-        if(!ready)epAt++;
-        ready=false; retry();
-      };
+      ws.onclose=function(){ if(!ready)epAt++; ready=false; retry(); };
       ws.onerror=function(){ try{ ws.close(); }catch(e){} };
     }
 
