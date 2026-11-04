@@ -1,0 +1,223 @@
+/* ───── 今天：签到 · 硬币 · 扭蛋 · 明信片 ───── */
+.gc{display:block;max-width:980px;margin-inline:auto;text-align:center}
+.gc svg{display:block;overflow:visible}
+.gc .ln{fill:none;stroke:currentColor;stroke-width:1.05;
+  stroke-linecap:round;stroke-linejoin:round}
+.gc .ln.thin{stroke-width:.85}
+.gc .ln.hair{stroke-width:.7;opacity:.4}
+.gc .dot{fill:currentColor;stroke:none}
+.gc text{font-family:var(--hand);fill:currentColor}
+
+/* 英文手写、中文宋体：手写字体里没有汉字，索性把这个差别当版式 */
+.gc-day{font-family:var(--hand);font-size:42px;font-weight:400;line-height:1.1;margin:0}
+.gc-dayzh{font-family:var(--hand);font-size:21px;color:var(--soft);
+  letter-spacing:.42em;margin:3px 0 0;padding-left:.42em}
+.gc-date{font-family:var(--hand);font-size:17px;color:var(--faint);margin:7px 0 24px}
+
+/* 签到＝盖一个邮戳 */
+.gc-sign{display:flex;flex-direction:column;align-items:center;gap:9px;margin-bottom:26px}
+.gc-slot{background:none;border:0;padding:0;color:var(--ink);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:transform .2s}
+.gc-slot:disabled{cursor:default}
+.gc-slot:not(:disabled):hover{transform:scale(1.04)}
+.gc-slot .stamped{animation:gcstamp .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes gcstamp{0%{opacity:0;transform:scale(1.9) rotate(-9deg)}
+  60%{opacity:1;transform:scale(.96) rotate(1deg)}100%{transform:none}}
+.gc-signw{font-family:var(--hand);font-size:21px;color:var(--soft);text-align:center}
+.gc-signw i{display:block;font-style:normal;font-size:16px;color:var(--faint);margin-top:2px}
+
+/* 潮位线 */
+.gc-tide{width:min(430px,86vw);margin:0 auto}
+.gc-tidecap{font-family:var(--hand);font-size:18px;color:var(--soft);display:flex;
+  justify-content:space-between;width:min(430px,86vw);margin:0 auto 30px;padding:0 2px}
+.gc-tidecap i{font-style:normal;font-size:15px;color:var(--faint);margin-left:7px}
+
+/* 硬币 */
+.gc-coins{display:flex;align-items:center;justify-content:center;gap:9px;
+  flex-wrap:wrap;margin-bottom:8px;min-height:30px}
+.gc-coins .n{font-family:var(--hand);font-size:21px;color:var(--soft)}
+.gc-coins .new{animation:gccoin .7s cubic-bezier(.3,.8,.3,1)}
+@keyframes gccoin{0%{opacity:0;transform:translateY(-16px) rotate(-40deg)}
+  100%{opacity:1;transform:none}}
+.gc-coinhint{font-family:var(--hand);font-size:17px;color:var(--soft);margin:0 0 42px}
+.gc-coinhint i{font-style:normal;color:var(--faint);margin-left:6px}
+
+/* 今天的一张 */
+.gc-th{font-family:var(--hand);font-size:25px;font-weight:400;margin:0 0 2px}
+.gc-tzh{font-family:var(--hand);font-size:17px;color:var(--faint);
+  letter-spacing:.4em;margin:0 0 18px;padding-left:.4em}
+.gc-shot{position:relative;width:min(470px,84vw);aspect-ratio:3/2;margin:0 auto}
+.gc-shot img{display:block;width:100%;height:100%;object-fit:cover;background:var(--field)}
+.gc-shot .corners{position:absolute;inset:-9px;z-index:3;pointer-events:none}
+.gc-shot .veil{position:absolute;inset:0;overflow:hidden;z-index:2}
+.gc-shot .veilw{position:absolute;left:0;right:0;top:50%;margin-top:-16px;z-index:3;
+  font-family:var(--hand);font-size:20px;color:var(--faint);text-align:center}
+.gc-shot .veilw i{display:block;font-style:normal;font-size:16px;margin-top:2px}
+.gc-shot.lit img{animation:gcdev 1.5s ease-out}
+@keyframes gcdev{0%{opacity:0;filter:contrast(.2) brightness(1.5)}
+  100%{opacity:1;filter:none}}
+.gc-shotcap{font-family:var(--hand);font-size:17px;color:var(--faint);display:flex;
+  justify-content:space-between;width:min(470px,84vw);margin:14px auto 52px}
+
+/* 机器 */
+.gc-m{width:min(200px,52vw);margin:0 auto;cursor:pointer;color:var(--ink);
+  user-select:none;-webkit-tap-highlight-color:transparent}
+.gc-m svg{width:100%;height:auto}
+.gc-m .ball{stroke-width:.85;opacity:.42}
+.gc-m .crank{transform-origin:112px 200px;transition:transform .9s cubic-bezier(.3,.9,.3,1)}
+.gc-m.turn .crank{transform:rotate(360deg)}
+@keyframes gcshake{0%,100%{transform:none}
+  20%{transform:translate(-2px,1px) rotate(-.4deg)}
+  45%{transform:translate(2px,-1px) rotate(.4deg)}
+  70%{transform:translate(-1px,0) rotate(-.2deg)}}
+.gc-m.turn{animation:gcshake .9s ease-in-out}
+
+/* 两个档 */
+.gc-buy{display:flex;gap:30px;justify-content:center;flex-wrap:wrap;margin:14px 0 10px}
+.gc-btn{background:none;border:0;border-bottom:1px solid var(--ink);padding:0 0 3px;
+  font-family:var(--hand);font-size:22px;color:var(--ink);cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;-webkit-tap-highlight-color:transparent}
+.gc-btn .c{display:inline-flex;gap:2px}
+.gc-btn:disabled{color:var(--faint);border-color:var(--hair);cursor:default}
+.gc-count{font-family:var(--hand);font-size:17px;color:var(--soft);margin:0}
+.gc-count i{font-style:normal;color:var(--faint);margin-left:6px}
+
+/* 掉出来的蛋 */
+.gc-cap{position:relative;width:96px;height:96px;margin:14px auto 0;color:var(--ink)}
+.gc-cap svg{width:100%;height:100%}
+.gc-cap path{fill:none;stroke:currentColor;stroke-width:1.05;stroke-linecap:round}
+@keyframes gcdrop{0%{opacity:0;transform:translateY(-120px) scale(.7)}
+  60%{opacity:1;transform:translateY(6px) scale(1)}
+  78%{transform:translateY(-5px)}100%{transform:translateY(0)}}
+.gc-cap.drop{animation:gcdrop .85s cubic-bezier(.3,.7,.3,1)}
+@keyframes gcwob{0%,100%{transform:rotate(0)}30%{transform:rotate(-7deg)}65%{transform:rotate(5deg)}}
+.gc-cap.wob{animation:gcwob 1.6s ease-in-out infinite}
+.gc-cap .top,.gc-cap .bot{transition:transform .7s cubic-bezier(.3,.8,.3,1),opacity .7s}
+.gc-cap.crack .top{transform:translate(-14px,-26px) rotate(-22deg);opacity:0}
+.gc-cap.crack .bot{transform:translate(12px,20px) rotate(16deg);opacity:0}
+
+/* 抽到的照片 */
+.gc-card{position:relative;max-width:min(620px,86vw);margin:18px auto 0;opacity:0}
+.gc-card.in{animation:gcrise 1.1s cubic-bezier(.22,.61,.24,1) forwards}
+@keyframes gcrise{from{opacity:0;transform:translateY(26px) scale(.97)}to{opacity:1;transform:none}}
+.gc-card img{display:block;width:100%;height:auto;background:var(--field)}
+.gc-meta{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-top:11px}
+.gc-ser{font-family:var(--hand);font-size:20px;color:var(--soft)}
+.gc-rank{font-family:var(--hand);font-size:20px;color:var(--faint);letter-spacing:.08em}
+.gc-dup{font-family:var(--hand);font-size:18px;color:var(--faint);margin:6px 0 0}
+.gc-send{background:none;border:0;border-bottom:1px solid var(--hair);padding:0 0 2px;
+  margin-top:14px;font-family:var(--hand);font-size:19px;color:var(--soft);cursor:pointer}
+.gc-send:hover{color:var(--ink);border-color:var(--ink)}
+
+/* 稀有度＝水面反应的强度，不是颜色 */
+.gc-water{position:absolute;left:50%;top:50%;width:420px;height:150px;
+  transform:translate(-50%,-50%);pointer-events:none;overflow:visible;z-index:3}
+.gc-water path{fill:none;stroke:var(--soft);stroke-width:.9;opacity:0;
+  transform-origin:120px 35px;animation:gcrip 1.7s cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes gcrip{0%{opacity:.55;transform:scale(.08)}100%{opacity:0;transform:scale(1)}}
+.gc-rain{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:4}
+.gc-rain line{stroke:var(--soft);stroke-width:1.1;opacity:0;
+  animation:gcfall 1.1s cubic-bezier(.4,0,.8,1) forwards}
+@keyframes gcfall{0%{opacity:0;transform:translateY(-70px)}
+  25%{opacity:.6}100%{opacity:0;transform:translateY(90px)}}
+
+/* 收集册 */
+.gc-book{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));
+  gap:7px;margin-top:52px;max-width:720px;margin-inline:auto}
+.gc-cell{aspect-ratio:3/2;background:var(--field);position:relative;overflow:hidden}
+.gc-cell img{display:block;width:100%;height:100%;object-fit:cover}
+.gc-cell.locked{background:transparent}
+.gc-cell.locked:after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;
+  margin:-2.5px 0 0 -2.5px;border-radius:50%;background:var(--hair);opacity:.55}
+
+/* ───── 明信片 ───── */
+.pc-ov{position:fixed;inset:0;z-index:999;background:var(--paper);
+  overflow:auto;padding:34px 18px 60px;display:flex;flex-direction:column;
+  align-items:center;gap:18px;color:var(--ink)}
+.pc-ov svg{display:block;overflow:visible}
+.pc-ov .ln{fill:none;stroke:currentColor;stroke-width:1.05;
+  stroke-linecap:round;stroke-linejoin:round}
+.pc-ov .ln.thin{stroke-width:.85}
+.pc-ov .ln.hair{stroke-width:.7;opacity:.4}
+.pc-ov .dot{fill:currentColor;stroke:none}
+.pc-ov text{font-family:var(--hand);fill:currentColor}
+.pc-x{position:fixed;right:20px;top:18px;z-index:2;background:none;border:0;
+  font-family:var(--hand);font-size:21px;color:var(--soft);cursor:pointer}
+.pc-x:hover{color:var(--ink)}
+
+/* 卡片上的字要落在画出来的横线上，所以行高必须跟卡片一起缩放。
+   --u = 卡片宽 / 520，整张卡的坐标都用它。 */
+.pc-stage{position:relative;width:min(560px,94vw);padding-bottom:78px;
+  --u:calc(min(560px,94vw) / 520)}
+.pc-flip{position:relative;width:100%;aspect-ratio:520/372;
+  transform-style:preserve-3d;transition:transform .9s cubic-bezier(.3,.8,.3,1)}
+.pc-flip.back{transform:rotateY(180deg)}
+.pc-side{position:absolute;inset:0;backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;background:var(--paper)}
+.pc-side.b{transform:rotateY(180deg)}
+.pc-frame{position:absolute;inset:0;z-index:2;pointer-events:none}
+.pc-frame svg{width:100%;height:100%}
+.pc-wet{position:absolute;left:0;right:0;bottom:0;height:88px;z-index:0;pointer-events:none}
+.pc-wet svg{width:100%;height:100%}
+
+.pc-in{position:absolute;inset:0;padding:5% 5.4%}
+.pc-photo{position:relative;width:86%;aspect-ratio:430/248;margin:1.5% auto 0}
+.pc-photo img{display:block;width:100%;height:100%;object-fit:cover;background:var(--field)}
+.pc-photo .corners{position:absolute;inset:-2%;z-index:3;pointer-events:none}
+.pc-cap{font-family:var(--hand);font-size:clamp(12px,2.5vw,18px);color:var(--faint);
+  display:flex;justify-content:space-between;margin-top:4%;padding:0 4px}
+
+/* 背面 */
+.pc-b .rules{position:absolute;left:calc(24 * var(--u));top:calc(58 * var(--u));
+  width:calc(272 * var(--u));z-index:1}
+.pc-b .rules svg{width:100%;height:auto}
+.pc-b .split{position:absolute;left:calc(300 * var(--u));top:calc(28 * var(--u));
+  bottom:calc(28 * var(--u));width:1px;z-index:1}
+.pc-b .split svg{height:100%;width:4px}
+.pc-msg{position:absolute;left:calc(30 * var(--u));top:calc(30 * var(--u));
+  width:calc(256 * var(--u));z-index:2;font-family:var(--hand);
+  font-size:calc(24 * var(--u));line-height:calc(51 * var(--u));
+  color:var(--ink);text-align:left;white-space:pre-wrap;word-break:break-word}
+.pc-sign{position:absolute;left:calc(30 * var(--u));bottom:calc(72 * var(--u));
+  z-index:2;font-family:var(--hand);font-size:calc(20 * var(--u));color:var(--soft)}
+.pc-stamp{position:absolute;right:5%;top:6%;z-index:3}
+.pc-pm{position:absolute;right:14.6%;top:9%;z-index:4}
+.pc-addr{position:absolute;right:5%;bottom:17%;z-index:1}
+.pc-boat{position:absolute;left:5%;bottom:5%;z-index:1}
+.pc-brand{position:absolute;right:5.8%;bottom:6%;z-index:2;
+  font-family:var(--hand);font-size:clamp(10px,2.4vw,16px);color:var(--faint)}
+.pc-stamp svg,.pc-pm svg,.pc-addr svg,.pc-boat svg{width:100%;height:auto}
+.pc-stamp{width:14.2%}.pc-pm{width:22.7%}.pc-addr{width:30.4%}.pc-boat{width:30%}
+
+/* 写字那一面 */
+.pc-tools{width:min(560px,94vw);display:flex;flex-direction:column;
+  align-items:center;gap:12px}
+.pc-note{font-family:var(--hand);font-size:17px;color:var(--faint);margin:0;text-align:center}
+.pc-note i{font-style:normal;display:block;margin-top:2px}
+.pc-ta{width:min(430px,88vw);min-height:78px;resize:none;background:transparent;
+  border:0;border-bottom:1px solid var(--hair);outline:none;
+  font-family:var(--hand);font-size:22px;line-height:1.7;color:var(--ink);
+  text-align:center;padding:6px 4px}
+.pc-ta::placeholder{color:var(--hair)}
+.pc-name{width:min(240px,70vw);background:transparent;border:0;
+  border-bottom:1px solid var(--hair);outline:none;text-align:center;
+  font-family:var(--hand);font-size:19px;color:var(--soft);padding:4px}
+.pc-row{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+.pc-btn{background:none;border:0;border-bottom:1px solid var(--ink);padding:0 0 3px;
+  font-family:var(--hand);font-size:21px;color:var(--ink);cursor:pointer}
+.pc-btn:disabled{color:var(--faint);border-color:var(--hair);cursor:default}
+.pc-link{width:min(520px,92vw);font-family:var(--sans);font-size:13px;color:var(--soft);
+  word-break:break-all;text-align:center;line-height:1.6;margin:0}
+.pc-ok{font-family:var(--hand);font-size:18px;color:var(--soft);min-height:24px;margin:0}
+
+@media (prefers-reduced-motion:reduce){
+  .gc-m.turn,.gc-cap.drop,.gc-cap.wob,.gc-card.in,.gc-shot.lit img,
+  .gc-slot .stamped,.gc-coins .new{animation:none}
+  .gc-card{opacity:1}.gc-water,.gc-rain{display:none}
+  .pc-flip{transition:none}
+}
+@media (max-width:620px){
+  .gc-day{font-size:34px}
+  .gc-book{grid-template-columns:repeat(auto-fill,minmax(60px,1fr))}
+  .gc-tidecap{font-size:15px}.gc-tidecap i{font-size:13px;margin-left:5px}
+}
