@@ -131,7 +131,9 @@
   margin:-2.5px 0 0 -2.5px;border-radius:50%;background:var(--hair);opacity:.55}
 
 /* ───── 明信片 ───── */
-.pc-ov{position:fixed;inset:0;z-index:999;background:var(--paper);
+/* z-index 要低于那颗跟着鼠标的水滴（div.drop 是 100），
+   但高于启动页 70 和底栏 20，不然水滴会被盖住 */
+.pc-ov{position:fixed;inset:0;z-index:90;background:var(--paper);
   overflow:auto;padding:34px 18px 60px;display:flex;flex-direction:column;
   align-items:center;gap:18px;color:var(--ink)}
 .pc-ov svg{display:block;overflow:visible}
