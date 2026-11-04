@@ -310,6 +310,81 @@ dl.kit dt{white-space:nowrap;color:var(--faint)}
 @media (prefers-reduced-motion:reduce){
   .gb-note.fresh{animation:none}.gb-rip{display:none}}
 
+/* ───── 扭蛋机 ───── */
+.gc{display:block;max-width:980px;margin-inline:auto;text-align:center}
+.gc-h{font-family:var(--hand);font-size:42px;font-weight:400;line-height:1.1;margin-bottom:6px}
+.gc-lede{font-family:var(--hand);font-size:21px;color:var(--soft);margin-bottom:18px}
+.gc-stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px}
+.gc-m{width:min(228px,58vw);cursor:pointer;color:var(--ink);user-select:none;
+  -webkit-tap-highlight-color:transparent}
+.gc-m svg{display:block;width:100%;height:auto;overflow:visible}
+.gc-m path,.gc-m circle,.gc-m ellipse,.gc-m line{fill:none;stroke:currentColor;
+  stroke-width:1.05;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.gc-m .ball{stroke-width:.85;opacity:.42}
+.gc-m .crank{transform-origin:214px 150px;transition:transform .9s cubic-bezier(.3,.9,.3,1)}
+.gc-m.turn .crank{transform:rotate(360deg)}
+@keyframes gcshake{0%,100%{transform:none}
+  20%{transform:translate(-2px,1px) rotate(-.4deg)}
+  45%{transform:translate(2px,-1px) rotate(.4deg)}
+  70%{transform:translate(-1px,0) rotate(-.2deg)}}
+.gc-m.turn{animation:gcshake .9s ease-in-out}
+.gc-go{font-family:var(--hand);font-size:27px;color:var(--ink);
+  border-bottom:1px solid var(--ink);padding-bottom:2px;transition:opacity .25s}
+.gc-go:disabled{opacity:.3;cursor:default;border-color:var(--hair)}
+.gc-count{font-family:var(--hand);font-size:18px;color:var(--faint)}
+
+/* 掉出来的蛋 */
+.gc-cap{position:relative;width:96px;height:96px;color:var(--ink)}
+.gc-cap svg{display:block;width:100%;height:100%;overflow:visible}
+.gc-cap path{fill:none;stroke:currentColor;stroke-width:1.05;stroke-linecap:round}
+@keyframes gcdrop{0%{opacity:0;transform:translateY(-120px) scale(.7)}
+  60%{opacity:1;transform:translateY(6px) scale(1)}
+  78%{transform:translateY(-5px)}100%{transform:translateY(0)}}
+.gc-cap.drop{animation:gcdrop .85s cubic-bezier(.3,.7,.3,1)}
+@keyframes gcwob{0%,100%{transform:rotate(0)}30%{transform:rotate(-7deg)}65%{transform:rotate(5deg)}}
+.gc-cap.wob{animation:gcwob 1.6s ease-in-out infinite}
+.gc-cap .top{transition:transform .7s cubic-bezier(.3,.8,.3,1),opacity .7s}
+.gc-cap .bot{transition:transform .7s cubic-bezier(.3,.8,.3,1),opacity .7s}
+.gc-cap.crack .top{transform:translate(-14px,-26px) rotate(-22deg);opacity:0}
+.gc-cap.crack .bot{transform:translate(12px,20px) rotate(16deg);opacity:0}
+
+/* 抽到的照片 */
+.gc-card{position:relative;max-width:min(620px,86vw);margin-inline:auto;opacity:0}
+.gc-card.in{animation:gcrise 1.1s cubic-bezier(.22,.61,.24,1) forwards}
+@keyframes gcrise{from{opacity:0;transform:translateY(26px) scale(.97)}
+  to{opacity:1;transform:none}}
+.gc-card img{display:block;width:100%;height:auto;background:var(--field)}
+.gc-meta{display:flex;align-items:baseline;justify-content:space-between;
+  gap:16px;margin-top:11px}
+.gc-ser{font-family:var(--hand);font-size:20px;color:var(--soft)}
+.gc-rank{font-family:var(--hand);font-size:20px;color:var(--faint);letter-spacing:.08em}
+.gc-dup{font-family:var(--hand);font-size:18px;color:var(--faint);margin-top:6px}
+
+/* 涟漪与雨：稀有度只用水来表达 */
+.gc-water{position:absolute;left:50%;top:50%;width:420px;height:150px;
+  transform:translate(-50%,-50%);pointer-events:none;overflow:visible;z-index:3}
+.gc-water path{fill:none;stroke:var(--soft);stroke-width:.9;opacity:0;
+  transform-origin:120px 35px;animation:gcrip 1.7s cubic-bezier(.2,.6,.3,1) forwards}
+@keyframes gcrip{0%{opacity:.55;transform:scale(.08)}100%{opacity:0;transform:scale(1)}}
+.gc-rain{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:4}
+.gc-rain line{stroke:var(--soft);stroke-width:1.1;opacity:0;
+  animation:gcfall 1.1s cubic-bezier(.4,0,.8,1) forwards}
+@keyframes gcfall{0%{opacity:0;transform:translateY(-70px)}
+  25%{opacity:.6}100%{opacity:0;transform:translateY(90px)}}
+
+/* 收集册 */
+.gc-book{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));
+  gap:7px;margin-top:52px;max-width:720px;margin-inline:auto}
+.gc-slot{aspect-ratio:3/2;background:var(--field);position:relative;overflow:hidden}
+.gc-slot img{display:block;width:100%;height:100%;object-fit:cover}
+.gc-slot.locked{background:transparent}
+.gc-slot.locked:after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;
+  margin:-2.5px 0 0 -2.5px;border-radius:50%;background:var(--hair);opacity:.55}
+@media (prefers-reduced-motion:reduce){
+  .gc-m.turn,.gc-cap.drop,.gc-cap.wob,.gc-card.in{animation:none}
+  .gc-card{opacity:1}.gc-water,.gc-rain{display:none}}
+@media (max-width:620px){.gc-h{font-size:34px}.gc-book{grid-template-columns:repeat(auto-fill,minmax(60px,1fr))}}
+
 /* 点击落下的涟漪 */
 .rip{position:fixed;left:0;top:0;z-index:95;pointer-events:none;overflow:visible;
   animation:rip 1.1s cubic-bezier(.2,.6,.3,1) forwards}
@@ -556,7 +631,7 @@ html.drops,html.drops *{cursor:none!important}
   /* ── 视图 ── */
   var NAV=[{id:"works",label:"Works"}]
     .concat(SERIES.map(function(s){return {id:s.id,label:s.en};}))
-    .concat([{id:"about",label:"About"},{id:"guestbook",label:"Guestbook"},{id:"contact",label:"Contact"}]);
+    .concat([{id:"about",label:"About"},{id:"gacha",label:"Gacha"},{id:"guestbook",label:"Guestbook"},{id:"contact",label:"Contact"}]);
 
   var topnav=document.getElementById("topnav"),views=document.getElementById("views");
   NAV.forEach(function(n){
@@ -777,6 +852,223 @@ html.drops,html.drops *{cursor:none!important}
     '<p style="color:var(--soft);margin-top:14px;font-size:13px">Prints · Exhibitions · Commissions</p>'+
     '</div></div><div><h2>Based in</h2><p style="color:var(--soft);font-size:13px;line-height:1.9">'+
     'London, United Kingdom<br>Zhejiang, China<br><br>© 2026 Xiyan Fan</p></div></div>';
+
+  /* ── 扭蛋机：抽一张照片 ── */
+  (function(){
+    var v=viewEl("gacha");
+
+    /* 稀有度：越私密的越难抽到。编号即 P 的 1-based 序号 */
+    var RANK={};
+    [17,18,19].forEach(function(n){RANK[n]="SSS";});
+    [2,20,21,35,38,40].forEach(function(n){RANK[n]="SS";});
+    [3,5,9,11,15,29,30,32,36,37,39,45].forEach(function(n){RANK[n]="S";});
+    var WEIGHT={SSS:0.67,SS:1.33,S:2.08,A:2.60};   /* 每张的相对权重 */
+    /* P 初始化后被重排过，下标 ≠ 照片编号，必须从 src 取真实编号 */
+    function numOf(i){ var m=/(\d+)\.jpg$/.exec(P[i].src); return m?+m[1]:0; }
+    function rankOf(i){ return RANK[numOf(i)]||"A"; }
+
+    /* 本地收集记录 */
+    var KEY="gacha-seen", seen={};
+    try{ seen=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(e){ seen={}; }
+    function save(){ try{ localStorage.setItem(KEY,JSON.stringify(seen)); }catch(e){} }
+    function got(){ var n=0; for(var k in seen) if(seen[k]) n++; return n; }
+
+    v.innerHTML='<div class="leaf one"><div class="gc">'+
+      '<h2 class="gc-h">Gacha</h2>'+
+      '<p class="gc-lede">Turn the handle. One photograph at a time.</p>'+
+      '<div class="gc-stage">'+
+        '<div class="gc-m" id="gc-m" role="button" tabindex="0" aria-label="转动手柄抽一张"></div>'+
+        '<button class="gc-go" id="gc-go" type="button">Turn</button>'+
+        '<p class="gc-count" id="gc-count"></p>'+
+      '</div>'+
+      '<div id="gc-out"></div>'+
+      '<div class="gc-book" id="gc-book" aria-label="收集册"></div>'+
+    '</div></div>';
+
+    var $=function(id){return v.querySelector("#"+id);},
+        mEl=$("gc-m"), goBtn=$("gc-go"), cntEl=$("gc-count"),
+        outEl=$("gc-out"), bookEl=$("gc-book"), busy=false;
+
+    /* 手抖一下的线：和雨滴、星星同一种画法 */
+    function J(a){ return (Math.random()*2-1)*a; }
+    function ink(pts,close,amp){
+      var d="",i,x,y;
+      for(i=0;i<pts.length;i++){
+        x=pts[i][0]+J(amp); y=pts[i][1]+J(amp);
+        d+=(i?"L":"M")+x.toFixed(1)+","+y.toFixed(1);
+      }
+      if(close)d+="Z";
+      return d;
+    }
+    function circle(cx,cy,r,amp,n){
+      var p=[],i,th; n=n||34;
+      for(i=0;i<=n;i++){ th=i/n*6.283; p.push([cx+Math.cos(th)*r, cy+Math.sin(th)*r]); }
+      return ink(p,false,amp||1);
+    }
+
+    /* 机器本体：球 → 颈 → 身 → 旋钮 → 取物口 */
+    function machine(){
+      var s='<svg viewBox="0 0 224 300" aria-hidden="true">';
+      /* 玻璃球 */
+      s+='<path d="'+circle(112,92,70,.5,76)+'"/>';
+      /* 球里的蛋 */
+      [[90,82,12],[128,76,10],[104,112,11],[140,106,9],[78,112,8],[120,132,8]]
+        .forEach(function(b){ s+='<path class="ball" d="'+circle(b[0],b[1],b[2],.4,30)+'"/>'; });
+      /* 颈：球和身之间的一道收口 */
+      s+='<path d="'+ink([[66,156],[158,156],[164,172],[60,172]],true,.55)+'"/>';
+      /* 机身：闭合的梯形 */
+      s+='<path d="'+ink([[60,172],[164,172],[158,278],[66,278]],true,.6)+'"/>';
+      /* 旋钮：正面的圆盘 + 一小截把手 */
+      s+='<g class="crank">'+
+         '<path d="'+circle(112,200,17,.45,34)+'"/>'+
+         '<path d="'+ink([[112,200],[112,187]],false,.4)+'"/>'+
+         '<path d="'+circle(112,184,4.5,.35,14)+'"/></g>';
+      /* 取物口 */
+      s+='<path d="'+ink([[88,234],[136,234],[136,266],[88,266]],true,.55)+'"/>';
+      /* 投币缝 */
+      s+='<path d="'+ink([[141,196],[141,206]],false,.4)+'"/>';
+      return s+'</svg>';
+    }
+    mEl.innerHTML=machine();
+
+    /* 蛋 */
+    function capsule(){
+      return '<svg viewBox="0 0 100 100" aria-hidden="true">'+
+        '<path class="top" d="'+ink(halfArc(50,50,34,true),false,1)+'"/>'+
+        '<path class="bot" d="'+ink(halfArc(50,50,34,false),false,1)+'"/>'+
+        '<path class="seam" d="'+ink([[16,50],[84,50]],false,.8)+'"/></svg>';
+    }
+    function halfArc(cx,cy,r,top){
+      var p=[],i,th,n=22;
+      for(i=0;i<=n;i++){ th=Math.PI+(i/n)*Math.PI; if(!top)th-=Math.PI;
+        p.push([cx+Math.cos(th)*r, cy+Math.sin(th)*r]); }
+      p.push([cx+(top?r:-r),cy]);
+      return p;
+    }
+
+    /* 涟漪：圈数由稀有度决定 */
+    function ripples(host,rings,delayStep){
+      var NS="http://www.w3.org/2000/svg",
+          svg=document.createElementNS(NS,"svg");
+      svg.setAttribute("class","gc-water");
+      svg.setAttribute("viewBox","0 0 240 70");
+      svg.setAttribute("aria-hidden","true");
+      for(var k=0;k<rings;k++){
+        var pts=[],N=30,i,th,rr,R=50+k*22;
+        for(i=0;i<=N;i++){ th=(i/N)*6.283; rr=R*(1+J(.03));
+          pts.push([120+Math.cos(th)*rr, 35+Math.sin(th)*rr*.3]); }
+        var p=document.createElementNS(NS,"path");
+        p.setAttribute("d",ink(pts,false,0));
+        p.setAttribute("style","animation-delay:"+(k*delayStep)+"s");
+        svg.appendChild(p);
+      }
+      host.appendChild(svg);
+      setTimeout(function(){ if(svg.parentNode)svg.parentNode.removeChild(svg); },
+                 1900+rings*delayStep*1000);
+    }
+    /* 雨：只有 SS 以上才落 */
+    function rain(host,drops){
+      var NS="http://www.w3.org/2000/svg",
+          svg=document.createElementNS(NS,"svg");
+      svg.setAttribute("class","gc-rain");
+      svg.setAttribute("viewBox","0 0 100 100");
+      svg.setAttribute("preserveAspectRatio","none");
+      svg.setAttribute("aria-hidden","true");
+      for(var k=0;k<drops;k++){
+        var x=6+Math.random()*88, l=document.createElementNS(NS,"line");
+        l.setAttribute("x1",x.toFixed(1)); l.setAttribute("y1","0");
+        l.setAttribute("x2",(x+J(1.5)).toFixed(1)); l.setAttribute("y2","9");
+        l.setAttribute("style","animation-delay:"+(Math.random()*.9).toFixed(2)+"s");
+        svg.appendChild(l);
+      }
+      host.appendChild(svg);
+      setTimeout(function(){ if(svg.parentNode)svg.parentNode.removeChild(svg); },2400);
+    }
+
+    function pick(){
+      var tot=0,i;
+      for(i=0;i<P.length;i++) tot+=WEIGHT[rankOf(i)];
+      var r=Math.random()*tot;
+      for(i=0;i<P.length;i++){ r-=WEIGHT[rankOf(i)]; if(r<=0) return i; }
+      return P.length-1;
+    }
+
+    function seriesName(p){
+      var s=SERIES.filter(function(x){return x.id===p.s;})[0];
+      return s?s.en:"";
+    }
+
+    function reveal(idx){
+      var p=P[idx], rank=rankOf(idx),
+          dup=!!seen[numOf(idx)];
+      seen[numOf(idx)]=1; save(); refresh();
+
+      var card=document.createElement("div");
+      card.className="gc-card";
+      card.innerHTML='<img alt="'+seriesName(p)+'" src="'+p.src+'">'+
+        '<div class="gc-meta"><span class="gc-ser">'+seriesName(p)+'</span>'+
+        '<span class="gc-rank">'+rank+'</span></div>'+
+        (dup?'<p class="gc-dup">这张你见过了。</p>':'');
+      outEl.innerHTML=""; outEl.appendChild(card);
+
+      /* 稀有度 = 水面反应的强度，不是颜色 */
+      var plan={A:{wait:0,rings:1,step:0,drops:0},
+                S:{wait:260,rings:3,step:.18,drops:0},
+                SS:{wait:620,rings:5,step:.2,drops:9},
+                SSS:{wait:1500,rings:8,step:.22,drops:18}}[rank];
+      setTimeout(function(){
+        card.classList.add("in");
+        ripples(card,plan.rings,plan.step);
+        if(plan.drops)rain(card,plan.drops);
+      },plan.wait);
+      setTimeout(function(){ busy=false; goBtn.disabled=false; },plan.wait+900);
+    }
+
+    function turn(){
+      if(busy)return; busy=true; goBtn.disabled=true;
+      outEl.innerHTML="";
+      mEl.classList.remove("turn"); void mEl.offsetWidth; mEl.classList.add("turn");
+
+      var cap=document.createElement("div");
+      cap.className="gc-cap drop"; cap.innerHTML=capsule();
+      cap.setAttribute("role","button"); cap.setAttribute("tabindex","0");
+      cap.setAttribute("aria-label","打开蛋");
+      outEl.appendChild(cap);
+
+      var idx=pick(), opened=false;
+      function openIt(){
+        if(opened)return; opened=true;
+        cap.classList.remove("wob"); cap.classList.add("crack");
+        setTimeout(function(){ reveal(idx); },620);
+      }
+      cap.addEventListener("click",openIt);
+      cap.addEventListener("keydown",function(e){
+        if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openIt(); }});
+      setTimeout(function(){ cap.classList.add("wob"); },900);
+      /* 不点也会自己开，别卡住 */
+      setTimeout(openIt,3200);
+    }
+
+    function refresh(){
+      var n=got();
+      cntEl.textContent=n>=P.length
+        ? "你把她全部看完了。"+P.length+" / "+P.length
+        : "你已收集 "+n+" / "+P.length;
+      var html="",i;
+      for(i=0;i<P.length;i++){
+        html+=seen[numOf(i)]
+          ? '<div class="gc-slot"><img alt="" loading="lazy" src="'+P[i].thumb+'"></div>'
+          : '<div class="gc-slot locked"></div>';
+      }
+      bookEl.innerHTML=html;
+    }
+
+    goBtn.addEventListener("click",turn);
+    mEl.addEventListener("click",turn);
+    mEl.addEventListener("keydown",function(e){
+      if(e.key==="Enter"||e.key===" "){ e.preventDefault(); turn(); }});
+    refresh();
+  })();
 
   /* ── 留言板：实时（Cloudflare Worker + WebSocket） ── */
   (function(){
